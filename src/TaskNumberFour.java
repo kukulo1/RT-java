@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class TaskNumberFour {
     public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "kukulo1"; //сюда свой пароль суй
+    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //С‚СѓС‚ РЅРµ С‚СЂРѕРіР°Р№, СЌС‚Рѕ СЃСЃС‹Р»РєР° РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”; ?createDatabaseIfNotExist=true РЅР°РґРѕ РґР»СЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРіРѕ СЃРѕР·РґР°РЅРёСЏ Р‘Р”, РµСЃР»Рё РµРµ РµС‰Рµ РЅРµС‚Сѓ
+    public final static String DATABASE_LOGIN = "root"; //СЃСЋРґР° Р»РѕРіРёРЅ
+    public final static String DATABASE_PASSWORD = "root"; //СЃСЋРґР° СЃРІРѕР№ РїР°СЂРѕР»СЊ СЃСѓР№
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK4 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -23,9 +23,9 @@ public class TaskNumberFour {
     public static void main(String[] args) {
         int choice = 0;
 
-        System.out.print("Введите первую строку (не менее 50 символов): ");
+        System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІСѓСЋ СЃС‚СЂРѕРєСѓ (РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ): ");
         string1 = scanString();
-        System.out.print("Введите вторую строку (не менее 50 символов): ");
+        System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂСѓСЋ СЃС‚СЂРѕРєСѓ (РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ): ");
         string2 = scanString();
         
         while (choice != -1) {
@@ -34,19 +34,20 @@ public class TaskNumberFour {
                 choice = SCANNER.nextInt();
                 doAction(choice);
             } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+                System.out.println("Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ РґРµР№СЃС‚РІРёСЏ!");
             }
         }
     }
 
     static void printConsoleMenu() {
-        System.out.println("1. Вывести все таблицы из MySQL");
-        System.out.println("2. Создать таблицу в MySQL");
-        System.out.println("3. Возвращение подстроки по индексам, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("4. Перевод строк в верхний и нижний регистры, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("5. Поиск подстроки и определение окончания подстроки, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("6. Сохранить все данные из MySQL в Excel и вывести на экран");System.out.println("-1. Закончить выполнение программы");
-        System.out.print("Выберите действие: ");
+        System.out.println("1. Р’С‹РІРµСЃС‚Рё РІСЃРµ С‚Р°Р±Р»РёС†С‹ РёР· MySQL");
+        System.out.println("2. РЎРѕР·РґР°С‚СЊ С‚Р°Р±Р»РёС†Сѓ РІ MySQL");
+        System.out.println("3. Р’РѕР·РІСЂР°С‰РµРЅРёРµ РїРѕРґСЃС‚СЂРѕРєРё РїРѕ РёРЅРґРµРєСЃР°Рј, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("4. РџРµСЂРµРІРѕРґ СЃС‚СЂРѕРє РІ РІРµСЂС…РЅРёР№ Рё РЅРёР¶РЅРёР№ СЂРµРіРёСЃС‚СЂС‹, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("5. РџРѕРёСЃРє РїРѕРґСЃС‚СЂРѕРєРё Рё РѕРїСЂРµРґРµР»РµРЅРёРµ РѕРєРѕРЅС‡Р°РЅРёСЏ РїРѕРґСЃС‚СЂРѕРєРё, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("6. РЎРѕС…СЂР°РЅРёС‚СЊ РІСЃРµ РґР°РЅРЅС‹Рµ РёР· MySQL РІ Excel Рё РІС‹РІРµСЃС‚Рё РЅР° СЌРєСЂР°РЅ");
+        System.out.println("-1. Р—Р°РєРѕРЅС‡РёС‚СЊ РІС‹РїРѕР»РЅРµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹");
+        System.out.print("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ");
     }
 
     static void doAction(int choice) {
@@ -61,19 +62,19 @@ public class TaskNumberFour {
                     e.printStackTrace();
                 }
                 if (tables.isEmpty()) {
-                    System.out.println("Таблицы не найдены.");
+                    System.out.println("РўР°Р±Р»РёС†С‹ РЅРµ РЅР°Р№РґРµРЅС‹.");
                 } else {
                     tables.forEach(System.out::println);
                 }
             }
             case 2 -> {
                 executeUpdate(CREATE_TABLE_QUERY);
-                System.out.println("Таблица создана!");
+                System.out.println("РўР°Р±Р»РёС†Р° СЃРѕР·РґР°РЅР°!");
             }
             case 3 -> {
-                System.out.print("Введите начальный индекс подстроки: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РЅР°С‡Р°Р»СЊРЅС‹Р№ РёРЅРґРµРєСЃ РїРѕРґСЃС‚СЂРѕРєРё: ");
                 int start = readIndex();
-                System.out.print("Введите конечный индекс подстроки: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РєРѕРЅРµС‡РЅС‹Р№ РёРЅРґРµРєСЃ РїРѕРґСЃС‚СЂРѕРєРё: ");
                 int end = readIndex();
                 String substr1 = getSubstring(string1, start, end);
                 String substr2 = getSubstring(string2, start, end);
@@ -91,7 +92,7 @@ public class TaskNumberFour {
             }
             case 5 -> {
                 SCANNER.nextLine();
-                System.out.print("Введите подстроку для поиска: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРѕРґСЃС‚СЂРѕРєСѓ РґР»СЏ РїРѕРёСЃРєР°: ");
                 String substr = SCANNER.nextLine();
 
                 boolean contains1 = string1.contains(substr);
@@ -110,7 +111,8 @@ public class TaskNumberFour {
                 String filePath = "src/resources/task4.csv";
                 String query = "SELECT * FROM TASK4";
                 try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {                    ResultSetMetaData metaData = resultSet.getMetaData();
+                     ResultSet resultSet = executeQuery(query)) {
+                    ResultSetMetaData metaData = resultSet.getMetaData();
                     int columnCount = metaData.getColumnCount();
 
                     for (int i = 1; i <= columnCount; i++) {
@@ -132,19 +134,19 @@ public class TaskNumberFour {
                         fileWriter.append("\n");
                     }
 
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
+                    System.out.println("Р”Р°РЅРЅС‹Рµ СѓСЃРїРµС€РЅРѕ СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅС‹ РІ С„Р°Р№Р» CSV: " + filePath);
 
                     printTable();
                 } catch (SQLException | IOException e) {
                     e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
+                    System.out.println("РћС€РёР±РєР° РїСЂРё СЌРєСЃРїРѕСЂС‚Рµ РґР°РЅРЅС‹С… РІ CSV.");
                 }
             }
             case -1 -> {
-                System.out.println("Выход из программы...");
+                System.out.println("Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹...");
             }
             default -> {
-                System.out.println("Неверный выбор. Повторите.");
+                System.out.println("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРІС‚РѕСЂРёС‚Рµ.");
             }
         }
     }
@@ -153,7 +155,7 @@ public class TaskNumberFour {
         do {
             input = SCANNER.nextLine();
             if (input.length() < 50) {
-                System.out.println("Строка слишком короткая. Нужно не менее 50 символов.");
+                System.out.println("РЎС‚СЂРѕРєР° СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєР°СЏ. РќСѓР¶РЅРѕ РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ.");
             }
         } while (input.length() < 50);
         return input;
@@ -215,7 +217,7 @@ public class TaskNumberFour {
                 SCANNER.nextLine();
                 return value;
             } else {
-                System.out.println("Введите целое число.");
+                System.out.println("Р’РІРµРґРёС‚Рµ С†РµР»РѕРµ С‡РёСЃР»Рѕ.");
                 SCANNER.next();
             }
         }
@@ -224,7 +226,7 @@ public class TaskNumberFour {
         if (start >= 0 && end <= input.length() && start < end) {
             return input.substring(start, end);
         } else {
-            System.out.println("Недопустимые индексы для подстроки в строке длиной " + input.length());
+            System.out.println("РќРµРґРѕРїСѓСЃС‚РёРјС‹Рµ РёРЅРґРµРєСЃС‹ РґР»СЏ РїРѕРґСЃС‚СЂРѕРєРё РІ СЃС‚СЂРѕРєРµ РґР»РёРЅРѕР№ " + input.length());
             return "";
         }
     }

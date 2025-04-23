@@ -9,7 +9,7 @@ public class TaskNumberTwo {
     public final static Scanner SCANNER = new Scanner(System.in);
     public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
     public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "kukulo1"; //сюда свой пароль суй
+    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK2 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -101,7 +101,8 @@ public class TaskNumberTwo {
                 String filePath = "src/resources/task2.csv";
                 String query = "SELECT * FROM TASK2";
                 try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {                    ResultSetMetaData metaData = resultSet.getMetaData();
+                     ResultSet resultSet = executeQuery(query)) {
+                    ResultSetMetaData metaData = resultSet.getMetaData();
                     int columnCount = metaData.getColumnCount();
 
                     for (int i = 1; i <= columnCount; i++) {

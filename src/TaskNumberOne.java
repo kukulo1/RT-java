@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class TaskNumberOne {
     public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "kukulo1"; //сюда свой пароль суй
+    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //С‚СѓС‚ РЅРµ С‚СЂРѕРіР°Р№, СЌС‚Рѕ СЃСЃС‹Р»РєР° РґР»СЏ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”; ?createDatabaseIfNotExist=true РЅР°РґРѕ РґР»СЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРіРѕ СЃРѕР·РґР°РЅРёСЏ Р‘Р”, РµСЃР»Рё РµРµ РµС‰Рµ РЅРµС‚Сѓ
+    public final static String DATABASE_LOGIN = "root"; //СЃСЋРґР° Р»РѕРіРёРЅ
+    public final static String DATABASE_PASSWORD = "root"; //СЃСЋРґР° СЃРІРѕР№ РїР°СЂРѕР»СЊ СЃСѓР№
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK1 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -28,24 +28,24 @@ public class TaskNumberOne {
                 choice = SCANNER.nextInt();
                 doAction(choice);
             } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+                System.out.println("Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ РґРµР№СЃС‚РІРёСЏ!");
             }
         }
     }
 
     static void printConsoleMenu() {
-        System.out.println("1. Вывести все таблицы из MySQL");
-        System.out.println("2. Создать таблицу в MySQL");
-        System.out.println("3. Сложение чисел, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("4. Вычитание чисел, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("5. Умножение чисел, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("6. Деление чисел, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("7. Деление чисел по модулю (остаток), результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("8. Возведение числа в модуль, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("9. Возведение числа в степень, результат сохранить в MySQL с последующим выводом в консоль");
-        System.out.println("10. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран");
-        System.out.println("-1. Закончить выполнение программы");
-        System.out.print("Выберите действие: ");
+        System.out.println("1. Р’С‹РІРµСЃС‚Рё РІСЃРµ С‚Р°Р±Р»РёС†С‹ РёР· MySQL");
+        System.out.println("2. РЎРѕР·РґР°С‚СЊ С‚Р°Р±Р»РёС†Сѓ РІ MySQL");
+        System.out.println("3. РЎР»РѕР¶РµРЅРёРµ С‡РёСЃРµР», СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("4. Р’С‹С‡РёС‚Р°РЅРёРµ С‡РёСЃРµР», СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("5. РЈРјРЅРѕР¶РµРЅРёРµ С‡РёСЃРµР», СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("6. Р”РµР»РµРЅРёРµ С‡РёСЃРµР», СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("7. Р”РµР»РµРЅРёРµ С‡РёСЃРµР» РїРѕ РјРѕРґСѓР»СЋ (РѕСЃС‚Р°С‚РѕРє), СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("8. Р’РѕР·РІРµРґРµРЅРёРµ С‡РёСЃР»Р° РІ РјРѕРґСѓР»СЊ, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("9. Р’РѕР·РІРµРґРµРЅРёРµ С‡РёСЃР»Р° РІ СЃС‚РµРїРµРЅСЊ, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ");
+        System.out.println("10. РЎРѕС…СЂР°РЅРёС‚СЊ РІСЃРµ РґР°РЅРЅС‹Рµ (РІС‹С€РµРїРѕР»СѓС‡РµРЅРЅС‹Рµ СЂРµР·СѓР»СЊС‚Р°С‚С‹) РёР· MySQL РІ Excel Рё РІС‹РІРµСЃС‚Рё РЅР° СЌРєСЂР°РЅ");
+        System.out.println("-1. Р—Р°РєРѕРЅС‡РёС‚СЊ РІС‹РїРѕР»РЅРµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹");
+        System.out.print("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ");
     }
 
     static void doAction(int choice) {
@@ -60,89 +60,90 @@ public class TaskNumberOne {
                     e.printStackTrace();
                 }
                 if (tables.isEmpty()) {
-                    System.out.println("Таблицы не найдены.");
+                    System.out.println("РўР°Р±Р»РёС†С‹ РЅРµ РЅР°Р№РґРµРЅС‹.");
                 } else {
                     tables.forEach(System.out::println);
                 }
             }
             case 2 -> {
                 executeUpdate(CREATE_TABLE_QUERY);
-                System.out.println("Таблица создана!");
+                System.out.println("РўР°Р±Р»РёС†Р° СЃРѕР·РґР°РЅР°!");
             }
             case 3 -> {
-                System.out.print("Введите первое число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІРѕРµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите второе число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂРѕРµ С‡РёСЃР»Рѕ: ");
                 double b = scanDouble();
                 double result = a + b;
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "addition", a, b, result);
             }
             case 4 -> {
-                System.out.print("Введите первое число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІРѕРµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите второе число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂРѕРµ С‡РёСЃР»Рѕ: ");
                 double b = scanDouble();
                 double result = a - b;
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "subtraction", a, b, result);
             }
             case 5 -> {
-                System.out.print("Введите первое число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІРѕРµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите второе число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂРѕРµ С‡РёСЃР»Рѕ: ");
                 double b = scanDouble();
                 double result = a * b;
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "multiplication", a, b, result);
             }
             case 6 -> {
-                System.out.print("Введите первое число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІРѕРµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите второе число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂРѕРµ С‡РёСЃР»Рѕ: ");
                 double b = scanDouble();
                 if (b == 0) {
-                    System.out.println("Деление на ноль!");
+                    System.out.println("Р”РµР»РµРЅРёРµ РЅР° РЅРѕР»СЊ!");
                     break;
                 }
                 double result = a / b;
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "division", a, b, result);
             }
             case 7 -> {
-                System.out.print("Введите первое число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІРѕРµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите второе число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂРѕРµ С‡РёСЃР»Рѕ: ");
                 double b = scanDouble();
                 if (b == 0) {
-                    System.out.println("Деление по модулю на ноль!");
+                    System.out.println("Р”РµР»РµРЅРёРµ РїРѕ РјРѕРґСѓР»СЋ РЅР° РЅРѕР»СЊ!");
                     break;
                 }
                 double result = a % b;
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "modulus", a, b, result);
             }
             case 8 -> {
-                System.out.print("Введите число для возведения в модуль: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РґР»СЏ РІРѕР·РІРµРґРµРЅРёСЏ РІ РјРѕРґСѓР»СЊ: ");
                 double a = scanDouble();
                 double result = Math.abs(a);
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "abs", a, null, result);
             }
             case 9 -> {
-                System.out.print("Введите число: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ");
                 double a = scanDouble();
-                System.out.print("Введите степень: ");
+                System.out.print("Р’РІРµРґРёС‚Рµ СЃС‚РµРїРµРЅСЊ: ");
                 double b = scanDouble();
                 double result = Math.pow(a, b);
-                System.out.println("Результат: " + result);
+                System.out.println("Р РµР·СѓР»СЊС‚Р°С‚: " + result);
                 executeUpdate(INSERT_QUERY, "pow", a, b, result);
             }
             case 10 -> {
                 String filePath = "src/resources/task1.csv";
                 String query = "SELECT * FROM TASK1";
                 try (FileWriter fileWriter = new FileWriter(filePath);
-                    ResultSet resultSet = executeQuery(query)) {                    ResultSetMetaData metaData = resultSet.getMetaData();
+                    ResultSet resultSet = executeQuery(query)) {
+                    ResultSetMetaData metaData = resultSet.getMetaData();
                     int columnCount = metaData.getColumnCount();
 
                     for (int i = 1; i <= columnCount; i++) {
@@ -164,25 +165,25 @@ public class TaskNumberOne {
                         fileWriter.append("\n");
                     }
 
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
+                    System.out.println("Р”Р°РЅРЅС‹Рµ СѓСЃРїРµС€РЅРѕ СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅС‹ РІ С„Р°Р№Р» CSV: " + filePath);
 
                     printTable();
                 } catch (SQLException | IOException e) {
                     e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
+                    System.out.println("РћС€РёР±РєР° РїСЂРё СЌРєСЃРїРѕСЂС‚Рµ РґР°РЅРЅС‹С… РІ CSV.");
                 }
             }
             case -1 -> {
-                System.out.println("Выход из программы...");
+                System.out.println("Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹...");
             }
             default -> {
-                System.out.println("Неверный выбор. Повторите.");
+                System.out.println("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРІС‚РѕСЂРёС‚Рµ.");
             }
         }
     }
     static double scanDouble() {
         while (!SCANNER.hasNextDouble()) {
-            System.out.println("Ошибка ввода. Введите число!");
+            System.out.println("РћС€РёР±РєР° РІРІРѕРґР°. Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ!");
             SCANNER.next();
         }
         return SCANNER.nextDouble();
