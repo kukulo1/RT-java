@@ -1,5 +1,3 @@
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,9 +5,9 @@ import java.util.Scanner;
 
 public class TaskNumberOne {
     public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
+    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true";
+    public final static String DATABASE_LOGIN = "root";
+    public final static String DATABASE_PASSWORD = "root";
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK1 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -17,18 +15,35 @@ public class TaskNumberOne {
             "number2 DOUBLE, " +
             "result DOUBLE)";
     public final static String INSERT_QUERY = "INSERT INTO TASK1 (operation, number1, number2, result) VALUES (?, ?, ?, ?)";
+    public static boolean tableCreated = false;
+    public static final String DROP_TABLE_QUERY = "DROP TABLE IF EXISTS TASK1";
 
 
     public static void main(String[] args) {
         int choice = 0;
+        executeUpdate(DROP_TABLE_QUERY);
 
         while (choice != -1) {
             printConsoleMenu();
+
             try {
+                if (!SCANNER.hasNextInt()) {
+                    System.out.println("Неверный выбор. Повторите.");
+                    SCANNER.next();
+                    continue;
+                }
+
                 choice = SCANNER.nextInt();
+
+                if (!tableCreated && choice > 2 && choice <= 10) {
+                    System.out.println("Ошибка! Таблица еще не создана для выполнения операции. Сперва выполните пункт 2.");
+                    continue;
+                }
+                SCANNER.nextLine();
                 doAction(choice);
-            } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
             }
         }
     }
@@ -46,6 +61,15 @@ public class TaskNumberOne {
         System.out.println("10. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран");
         System.out.println("-1. Закончить выполнение программы");
         System.out.print("Выберите действие: ");
+    }
+
+    static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("Произошла ошибка при попытке подключения к БД: " + e.getMessage());
+        }
+        return null;
     }
 
     static void doAction(int choice) {
@@ -67,6 +91,7 @@ public class TaskNumberOne {
             }
             case 2 -> {
                 executeUpdate(CREATE_TABLE_QUERY);
+                tableCreated = true;
                 System.out.println("Таблица создана!");
             }
             case 3 -> {
@@ -139,38 +164,35 @@ public class TaskNumberOne {
                 executeUpdate(INSERT_QUERY, "pow", a, b, result);
             }
             case 10 -> {
-                String filePath = "src/resources/task1.csv";
-                String query = "SELECT * FROM TASK1";
-                try (FileWriter fileWriter = new FileWriter(filePath);
-                    ResultSet resultSet = executeQuery(query)) {
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
+                System.out.print("Введите название файла с расширением (.xls): ");
+                String fileName = SCANNER.nextLine().trim();
 
-                    for (int i = 1; i <= columnCount; i++) {
-                        fileWriter.append('"').append(metaData.getColumnName(i)).append('"');
-                        if (i < columnCount) fileWriter.append(";");
-                    }
-                    fileWriter.append("\n");
+                while (!fileName.toLowerCase().endsWith(".xls")) {
+                    System.out.print("Ошибка: файл должен оканчиваться на .xls. Повторите ввод: ");
+                    fileName = SCANNER.nextLine().trim();
+                }
 
-                    while (resultSet.next()) {
-                        for (int i = 1; i <= columnCount; i++) {
-                            String value = resultSet.getString(i);
-                            fileWriter.append('"');
-                            if (value != null) {
-                                fileWriter.append(value.replace("\"", "\"\""));
-                            }
-                            fileWriter.append('"');
-                            if (i < columnCount) fileWriter.append(";");
-                        }
-                        fileWriter.append("\n");
-                    }
+                String filePath = "C:/Users/User/Desktop/" + fileName;
 
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
+                String exportQuery =
+                        "SELECT 'id', 'operation', 'number1', 'number2', 'result' " +
+                                "UNION ALL " +
+                                "SELECT id, operation, number1, number2, result FROM TASK1 " +
+                                "INTO OUTFILE '" + filePath + "' " +
+                                "CHARACTER SET cp1251";
 
+                try (Connection conn = getConnection();
+                     PreparedStatement stmt = conn.prepareStatement(exportQuery)) {
+
+                    stmt.executeQuery();
+                    System.out.println("Данные успешно экспортированы в файл: " + filePath);
                     printTable();
-                } catch (SQLException | IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
+                } catch (SQLException e) {
+                    if (e.getMessage().contains("already exists")) {
+                        System.out.println("Файл уже существует! Удалите его и попробуйте ещё раз.");
+                    } else {
+                        System.out.println("Ошибка при экспорте: " + e.getMessage());
+                    }
                 }
             }
             case -1 -> {
@@ -216,25 +238,27 @@ public class TaskNumberOne {
         }
     }
     static void printTable() {
-        String query = "SELECT * FROM TASK1";
-        try (ResultSet resultSet = executeQuery(query)) {
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
+        try (Connection conn = getConnection();
+                Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery("SELECT * FROM TASK1")) {
 
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
+            System.out.printf("%-3s | %-20s | %-15s | %-15s | %-20s%n",
+                    "ID", "Operation", "Number1", "Number2", "Result");
+            System.out.println("-------------------------------------------------------------------------------");
 
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String op = rs.getString("operation");
+                double n1 = rs.getDouble("number1");
+                double n2 = rs.getDouble("number2");
+                double result = rs.getDouble("result");
+
+                System.out.printf("%-3d | %-20s | %-15.4f | %-15.4f | %-20.4f%n",
+                        id, op, n1, n2, result);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Ошибка при выводе таблицы: " + e.getMessage());
         }
     }
 }

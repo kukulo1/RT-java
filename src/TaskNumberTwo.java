@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class TaskNumberTwo {
     public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
+    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true";
+    public final static String DATABASE_LOGIN = "root";
+    public final static String DATABASE_PASSWORD = "root";
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK2 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -18,32 +18,58 @@ public class TaskNumberTwo {
             "result TEXT)";
     public final static String INSERT_QUERY = "INSERT INTO TASK2 (operation, string1, string2, result) VALUES (?, ?, ?, ?)";
     public static String string1, string2;
+    public static boolean tableCreated = false;
+    public static final String DROP_TABLE_QUERY = "DROP TABLE IF EXISTS TASK2";
 
 
     public static void main(String[] args) {
         int choice = 0;
+        executeUpdate(DROP_TABLE_QUERY);
 
         while (choice != -1) {
             printConsoleMenu();
+
             try {
+                if (!SCANNER.hasNextInt()) {
+                    System.out.println("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРІС‚РѕСЂРёС‚Рµ.");
+                    SCANNER.next();
+                    continue;
+                }
+
                 choice = SCANNER.nextInt();
+
+                if (!tableCreated && choice > 2 && choice <= 7) {
+                    System.out.println("РћС€РёР±РєР°! РўР°Р±Р»РёС†Р° РµС‰Рµ РЅРµ СЃРѕР·РґР°РЅР° РґР»СЏ РІС‹РїРѕР»РЅРµРЅРёСЏ РѕРїРµСЂР°С†РёРё. РЎРїРµСЂРІР° РІС‹РїРѕР»РЅРёС‚Рµ РїСѓРЅРєС‚ 2.");
+                    continue;
+                }
+                SCANNER.nextLine();
                 doAction(choice);
-            } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+
+            } catch (Exception e) {
+                System.out.println("РћС€РёР±РєР°: " + e.getMessage());
             }
         }
     }
 
+    static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё РїРѕРїС‹С‚РєРµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”: " + e.getMessage());
+        }
+        return null;
+    }
+
     static void printConsoleMenu() {
-        System.out.println("1. Вывести все таблицы из MySQL.");
-        System.out.println("2. Создать таблицу в MySQL.");
-        System.out.println("3. Ввести две строки с клавиатуры, результат сохранить в MySQL с последующим выводом в консоль.");
-        System.out.println("4. Подсчитать размер ранее введенных строк, результат сохранить в MySQL с последующим выводом в консоль.");
-        System.out.println("5. Объединить две строки в единое целое, результат сохранить в MySQL с последующим выводом в консоль.");
-        System.out.println("6. Сравнить две ранее введенные строки, результат сохранить в MySQL с последующим выводом в консоль.");
-        System.out.println("7. Сохранить все данные (вышеполученные результаты) из MySQL в Excel и вывести на экран.");
-        System.out.println("-1. Закончить выполнение программы");
-        System.out.print("Выберите действие: ");
+        System.out.println("1. Р’С‹РІРµСЃС‚Рё РІСЃРµ С‚Р°Р±Р»РёС†С‹ РёР· MySQL.");
+        System.out.println("2. РЎРѕР·РґР°С‚СЊ С‚Р°Р±Р»РёС†Сѓ РІ MySQL.");
+        System.out.println("3. Р’РІРµСЃС‚Рё РґРІРµ СЃС‚СЂРѕРєРё СЃ РєР»Р°РІРёР°С‚СѓСЂС‹, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ.");
+        System.out.println("4. РџРѕРґСЃС‡РёС‚Р°С‚СЊ СЂР°Р·РјРµСЂ СЂР°РЅРµРµ РІРІРµРґРµРЅРЅС‹С… СЃС‚СЂРѕРє, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ.");
+        System.out.println("5. РћР±СЉРµРґРёРЅРёС‚СЊ РґРІРµ СЃС‚СЂРѕРєРё РІ РµРґРёРЅРѕРµ С†РµР»РѕРµ, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ.");
+        System.out.println("6. РЎСЂР°РІРЅРёС‚СЊ РґРІРµ СЂР°РЅРµРµ РІРІРµРґРµРЅРЅС‹Рµ СЃС‚СЂРѕРєРё, СЂРµР·СѓР»СЊС‚Р°С‚ СЃРѕС…СЂР°РЅРёС‚СЊ РІ MySQL СЃ РїРѕСЃР»РµРґСѓСЋС‰РёРј РІС‹РІРѕРґРѕРј РІ РєРѕРЅСЃРѕР»СЊ.");
+        System.out.println("7. РЎРѕС…СЂР°РЅРёС‚СЊ РІСЃРµ РґР°РЅРЅС‹Рµ (РІС‹С€РµРїРѕР»СѓС‡РµРЅРЅС‹Рµ СЂРµР·СѓР»СЊС‚Р°С‚С‹) РёР· MySQL РІ Excel Рё РІС‹РІРµСЃС‚Рё РЅР° СЌРєСЂР°РЅ.");
+        System.out.println("-1. Р—Р°РєРѕРЅС‡РёС‚СЊ РІС‹РїРѕР»РЅРµРЅРёРµ РїСЂРѕРіСЂР°РјРјС‹");
+        System.out.print("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ");
     }
 
     static void doAction(int choice) {
@@ -58,22 +84,23 @@ public class TaskNumberTwo {
                     e.printStackTrace();
                 }
                 if (tables.isEmpty()) {
-                    System.out.println("Таблицы не найдены.");
+                    System.out.println("РўР°Р±Р»РёС†С‹ РЅРµ РЅР°Р№РґРµРЅС‹.");
                 } else {
                     tables.forEach(System.out::println);
                 }
             }
             case 2 -> {
                 executeUpdate(CREATE_TABLE_QUERY);
-                System.out.println("Таблица создана!");
+                tableCreated = true;
+                System.out.println("РўР°Р±Р»РёС†Р° СЃРѕР·РґР°РЅР°!");
             }
             case 3 -> {
-                System.out.print("Введите первую строку (не менее 50 символов): ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РїРµСЂРІСѓСЋ СЃС‚СЂРѕРєСѓ (РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ): ");
                 string1 = scanString();
-                System.out.print("Введите вторую строку (не менее 50 символов): ");
+                System.out.print("Р’РІРµРґРёС‚Рµ РІС‚РѕСЂСѓСЋ СЃС‚СЂРѕРєСѓ (РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ): ");
                 string2 = scanString();
                 executeUpdate(INSERT_QUERY, "input", string1, string2, null);
-                System.out.println("Строки сохранены:");
+                System.out.println("РЎС‚СЂРѕРєРё СЃРѕС…СЂР°РЅРµРЅС‹:");
                 System.out.println("1: " + string1);
                 System.out.println("2: " + string2);
             }
@@ -83,60 +110,59 @@ public class TaskNumberTwo {
                 int length2 = string2.length();
                 String result = "Length1: " + length1 + ", Length2: " + length2;
                 executeUpdate(INSERT_QUERY, "length", string1, string2, result);
-                System.out.println("Длины строк: " + result);
+                System.out.println("Р”Р»РёРЅС‹ СЃС‚СЂРѕРє: " + result);
             }
             case 5 -> {
                 if (!stringsEntered()) break;
                 String result = string1 + string2;
-                System.out.println("Объединение строк: " + result);
+                System.out.println("РћР±СЉРµРґРёРЅРµРЅРёРµ СЃС‚СЂРѕРє: " + result);
                 executeUpdate(INSERT_QUERY, "concatenation", string1, string2, result);
             }
             case 6 -> {
                 if (!stringsEntered()) break;
                 String result = string1.equals(string2) ? "equal" : "not equal";
-                System.out.println("Сравнение: " + result);
+                System.out.println("РЎСЂР°РІРЅРµРЅРёРµ: " + result);
                 executeUpdate(INSERT_QUERY, "comparison", string1, string2, result);
             }
             case 7 -> {
-                String filePath = "src/resources/task2.csv";
-                String query = "SELECT * FROM TASK2";
-                try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
+                System.out.print("Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р° СЃ СЂР°СЃС€РёСЂРµРЅРёРµРј (.xls): ");
+                String fileName = SCANNER.nextLine().trim();
 
-                    for (int i = 1; i <= columnCount; i++) {
-                        fileWriter.append('"').append(metaData.getColumnName(i)).append('"');
-                        if (i < columnCount) fileWriter.append(";");
-                    }
-                    fileWriter.append("\n");
+                while (!fileName.toLowerCase().endsWith(".xls")) {
+                    System.out.print("РћС€РёР±РєР°: С„Р°Р№Р» РґРѕР»Р¶РµРЅ РѕРєР°РЅС‡РёРІР°С‚СЊСЃСЏ РЅР° .xls. РџРѕРІС‚РѕСЂРёС‚Рµ РІРІРѕРґ: ");
+                    fileName = SCANNER.nextLine().trim();
+                }
 
-                    while (resultSet.next()) {
-                        for (int i = 1; i <= columnCount; i++) {
-                            String value = resultSet.getString(i);
-                            fileWriter.append('"');
-                            if (value != null) {
-                                fileWriter.append(value.replace("\"", "\"\""));
-                            }
-                            fileWriter.append('"');
-                            if (i < columnCount) fileWriter.append(";");
-                        }
-                        fileWriter.append("\n");
-                    }
+                String filePath = "C:/Users/User/Desktop/" + fileName;
 
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
+                String exportQuery =
+                        "SELECT 'id', 'operation', 'string1', 'string2', 'result' " +
+                                "UNION ALL " +
+                                "SELECT id, operation, string1, string2, result FROM TASK2 " +
+                                "INTO OUTFILE '" + filePath + "' " +
+                                "CHARACTER SET cp1251";
+
+                try (Connection conn = getConnection();
+                     PreparedStatement stmt = conn.prepareStatement(exportQuery)) {
+
+                    stmt.executeQuery();
+                    System.out.println("Р”Р°РЅРЅС‹Рµ СѓСЃРїРµС€РЅРѕ СЌРєСЃРїРѕСЂС‚РёСЂРѕРІР°РЅС‹ РІ С„Р°Р№Р»: " + filePath);
 
                     printTable();
-                } catch (SQLException | IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
+
+                } catch (SQLException e) {
+                    if (e.getMessage().contains("already exists")) {
+                        System.out.println("Р¤Р°Р№Р» СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚! РЈРґР°Р»РёС‚Рµ РµРіРѕ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.");
+                    } else {
+                        System.out.println("РћС€РёР±РєР° РїСЂРё СЌРєСЃРїРѕСЂС‚Рµ: " + e.getMessage());
+                    }
                 }
             }
             case -1 -> {
-                System.out.println("Выход из программы...");
+                System.out.println("Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹...");
             }
             default -> {
-                System.out.println("Неверный выбор. Повторите.");
+                System.out.println("РќРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРІС‚РѕСЂРёС‚Рµ.");
             }
         }
     }
@@ -145,7 +171,7 @@ public class TaskNumberTwo {
         do {
             input = SCANNER.nextLine();
             if (input.length() < 50) {
-                System.out.println("Строка слишком короткая. Нужно не менее 50 символов.");
+                System.out.println("РЎС‚СЂРѕРєР° СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєР°СЏ. РќСѓР¶РЅРѕ РЅРµ РјРµРЅРµРµ 50 СЃРёРјРІРѕР»РѕРІ.");
             }
         } while (input.length() < 50);
         return input;
@@ -178,21 +204,24 @@ public class TaskNumberTwo {
         }
     }
     static void printTable() {
-        String query = "SELECT * FROM TASK2";
-        try (ResultSet resultSet = executeQuery(query)) {
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM TASK2")) {
 
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
+            System.out.printf("%-3s | %-20s | %-100s | %-100s | %-200s%n",
+                    "ID", "Operation", "String1", "String2", "Result");
+            System.out.println("----------------------------------------------------------------------------------------------------" +
+                    "------------------------------------------------------------------------------------------");
 
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String operation = rs.getString("operation");
+                String string1 = rs.getString("string1");
+                String string2 = rs.getString("string2");
+                String result = rs.getString("result");
+
+                System.out.printf("%-3d | %-20s | %-100s | %-100s | %-200s%n",
+                        id, operation, string1, string2, result);
             }
 
         } catch (SQLException e) {
@@ -201,7 +230,7 @@ public class TaskNumberTwo {
     }
     static boolean stringsEntered() {
         if (string1 == null || string2 == null) {
-            System.out.println("Сначала введите строки (пункт 3).");
+            System.out.println("РЎРЅР°С‡Р°Р»Р° РІРІРµРґРёС‚Рµ СЃС‚СЂРѕРєРё (РїСѓРЅРєС‚ 3).");
             return false;
         }
         return true;

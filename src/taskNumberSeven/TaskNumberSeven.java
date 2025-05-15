@@ -1,39 +1,59 @@
 package taskNumberSeven;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
 import java.util.Scanner;
 
 public class TaskNumberSeven {
-    public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
-    public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK7 (" +
+    protected final static Scanner SCANNER = new Scanner(System.in);
+    private final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true";
+    private final static String DATABASE_LOGIN = "root";
+    private final static String DATABASE_PASSWORD = "root";
+    protected final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK7 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "array_name VARCHAR(255), " +
             "index_pos INT, " +
             "value INT)";
-    public final static String INSERT_QUERY = "INSERT INTO TASK7 (array_name, index_pos, value) VALUES (?, ?, ?)";
+    protected final static String INSERT_QUERY = "INSERT INTO TASK7 (array_name, index_pos, value) VALUES (?, ?, ?)";
     public static Sort sort;
+    protected static boolean tableCreated = false;
+    protected final static String DROP_TABLE_QUERY = "DROP TABLE IF EXISTS TASK7";
+
 
     public static void main(String[] args) {
+        executeUpdate(DROP_TABLE_QUERY);
         int choice = 0;
 
         while (choice != -1) {
             printConsoleMenu();
+
             try {
-                choice = SCANNER.nextInt();
+                String input = SCANNER.next();
+
+                if (!input.matches("-?\\d+")) {
+                    System.out.println("Неверный выбор. Повторите.");
+                    continue;
+                }
+
+                try {
+                    choice = Integer.parseInt(input);
+                } catch (NumberFormatException e) {
+                    System.out.println("Неверный выбор. Повторите.");
+                    continue;
+                }
+
+                if (!tableCreated && choice > 2 && choice <= 5) {
+                    System.out.println("Ошибка! Таблица еще не создана для выполнения операции. Сперва выполните пункт 2.");
+                    continue;
+                }
+
                 doAction(choice);
-            } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+
+            } catch (Exception e) {
+                System.out.println("Неожиданная ошибка: " + e.getMessage());
             }
         }
     }
+
 
     static void printConsoleMenu() {
         System.out.println("1. Вывести все таблицы из базы данных MySQL.");
@@ -45,90 +65,31 @@ public class TaskNumberSeven {
         System.out.print("Выберите действие: ");
     }
 
+    static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("Произошла ошибка при попытке подключения к БД: " + e.getMessage());
+        }
+        return null;
+    }
+
     static void doAction(int choice) {
         switch (choice) {
             case 1 -> {
-                List<String> tables = new ArrayList<>();
-                try (ResultSet resultSet = executeQuery("SHOW TABLES")) {
-                    while (resultSet.next()) {
-                        tables.add(resultSet.getString(1));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                if (tables.isEmpty()) {
-                    System.out.println("Таблицы не найдены.");
-                } else {
-                    tables.forEach(System.out::println);
-                }
+                DisplayTables.execute();
             }
             case 2 -> {
-                executeUpdate(CREATE_TABLE_QUERY);
-                System.out.println("Таблица создана!");
+                CreateTable.execute();
             }
             case 3 -> {
-                try {
-                    sort = new Sort();
-                    sort.input();
-                    sort.printArray(sort.array, "Исходный массив");
-                    for (int i = 0; i < sort.array.length; i++) {
-                        executeUpdate(INSERT_QUERY, "original", i, sort.array[i]);
-                    }
-                } catch (InputMismatchException e) {
-                    System.out.println("Ошибка ввода: необходимо вводить только целые числа. Операция прервана.");
-                    SCANNER.nextLine();
-                }
+                InputArray.execute();
             }
             case 4 -> {
-                if (sort != null) {
-                    int[] asc = sort.sortAscending();
-                    sort.printArray(asc, "Отсортированный по возрастанию массив");
-                    for (int i = 0; i < asc.length; i++) {
-                        executeUpdate(INSERT_QUERY, "ascending sort", i, sort.array[i]);
-                    }
-                    int[] desc = sort.sortDescending();
-                    sort.printArray(desc, "Отсортированный по убыванию массив");
-                    for (int i = 0; i < desc.length; i++) {
-                        executeUpdate(INSERT_QUERY, "descending sort", i, sort.array[i]);
-                    }
-                } else {
-                    System.out.println("Ошибка: массив не был введён ранее.");
-                }
+                SortArray.execute();
             }
             case 5 -> {
-                String filePath = "src/resources/task7.csv";
-                String query = "SELECT * FROM TASK7";
-                try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
-
-                    for (int i = 1; i <= columnCount; i++) {
-                        fileWriter.append('"').append(metaData.getColumnName(i)).append('"');
-                        if (i < columnCount) fileWriter.append(";");
-                    }
-                    fileWriter.append("\n");
-
-                    while (resultSet.next()) {
-                        for (int i = 1; i <= columnCount; i++) {
-                            String value = resultSet.getString(i);
-                            fileWriter.append('"');
-                            if (value != null) {
-                                fileWriter.append(value.replace("\"", "\"\""));
-                            }
-                            fileWriter.append('"');
-                            if (i < columnCount) fileWriter.append(";");
-                        }
-                        fileWriter.append("\n");
-                    }
-
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
-
-                    printTable();
-                } catch (SQLException | IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
-                }
+                SQLToExcel.execute();
             }
             case -1 -> {
                 System.out.println("Выход из программы...");
@@ -140,7 +101,7 @@ public class TaskNumberSeven {
     }
     static ResultSet executeQuery(String query, Object... params) {
         try {
-            Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+            Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             for (int i = 0; i < params.length; i++) {
                 statement.setObject(i + 1, params[i]);
@@ -153,7 +114,7 @@ public class TaskNumberSeven {
     }
     static int executeUpdate(String query, Object... params) {
         try {
-            Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+            Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             for (int i = 0; i < params.length; i++) {
                 statement.setObject(i + 1, params[i]);
@@ -165,21 +126,22 @@ public class TaskNumberSeven {
         }
     }
     static void printTable() {
-        String query = "SELECT * FROM TASK7";
-        try (ResultSet resultSet = executeQuery(query)) {
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
+        String tablename = "TASK7";
 
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
+        try (Connection con = getConnection();
+             Statement stmt1 = con.createStatement();
+             ResultSet rs = stmt1.executeQuery("SELECT * FROM " + tablename)) {
 
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println();
+            System.out.printf("%-3s | %-20s | %-10s | %-100s%n", "ID", "Array Name", "Index Pos", "Value");
+            System.out.println("----------------------------------------------------------");
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String arrayName = rs.getString("array_name");
+                int indexPos = rs.getInt("index_pos");
+                int value = rs.getInt("value");
+
+                System.out.printf("%-3d | %-20s | %-10d | %-100d%n", id, arrayName, indexPos, value);
             }
 
         } catch (SQLException e) {

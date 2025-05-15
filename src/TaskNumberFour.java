@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class TaskNumberFour {
     public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
+    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true";
+    public final static String DATABASE_LOGIN = "root";
+    public final static String DATABASE_PASSWORD = "root";
     public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK4 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "operation VARCHAR(255), " +
@@ -18,23 +18,40 @@ public class TaskNumberFour {
             "result TEXT)";
     public final static String INSERT_QUERY = "INSERT INTO TASK4 (operation, string1, string2, result) VALUES (?, ?, ?, ?)";
     public static String string1, string2;
+    public static boolean tableCreated = false;
+    public static final String DROP_TABLE_QUERY = "DROP TABLE IF EXISTS TASK4";
 
 
     public static void main(String[] args) {
         int choice = 0;
+        executeUpdate(DROP_TABLE_QUERY);
 
         System.out.print("Введите первую строку (не менее 50 символов): ");
         string1 = scanString();
         System.out.print("Введите вторую строку (не менее 50 символов): ");
         string2 = scanString();
-        
+
         while (choice != -1) {
             printConsoleMenu();
+
             try {
+                if (!SCANNER.hasNextInt()) {
+                    System.out.println("Неверный выбор. Повторите.");
+                    SCANNER.next();
+                    continue;
+                }
+
                 choice = SCANNER.nextInt();
+
+                if (!tableCreated && choice > 2 && choice <= 6) {
+                    System.out.println("Ошибка! Таблица еще не создана для выполнения операции. Сперва выполните пункт 2.");
+                    continue;
+                }
+                SCANNER.nextLine();
                 doAction(choice);
-            } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
             }
         }
     }
@@ -48,6 +65,15 @@ public class TaskNumberFour {
         System.out.println("6. Сохранить все данные из MySQL в Excel и вывести на экран");
         System.out.println("-1. Закончить выполнение программы");
         System.out.print("Выберите действие: ");
+    }
+
+    static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("Произошла ошибка при попытке подключения к БД: " + e.getMessage());
+        }
+        return null;
     }
 
     static void doAction(int choice) {
@@ -69,20 +95,22 @@ public class TaskNumberFour {
             }
             case 2 -> {
                 executeUpdate(CREATE_TABLE_QUERY);
+                tableCreated = true;
                 System.out.println("Таблица создана!");
             }
             case 3 -> {
-                System.out.print("Введите начальный индекс подстроки: ");
-                int start = readIndex();
-                System.out.print("Введите конечный индекс подстроки: ");
-                int end = readIndex();
-                String substr1 = getSubstring(string1, start, end);
-                String substr2 = getSubstring(string2, start, end);
-                if (substr1.isEmpty() && substr2.isEmpty()) break;
-                String result = String.format("substrings from %d to %d: substr1: " + substr1 + "; substr2: " + substr2, start, end);
+                System.out.println("Из какой строки извлекать подстроку: 1 или 2?");
+                int selected = readSafeIndex("Выберите номер строки (1 или 2): ", 1, 2);
+                String selectedInput = (selected == 1) ? string1 : string2;
+                int start = readSafeIndex("Введите начальный индекс подстроки: ", 0, selectedInput.length());
+                int end = readSafeIndex("Введите конечный индекс подстроки: ", start, selectedInput.length());
+
+                String sub = getSubstring(selectedInput, start, end);
+
+                String result = sub;
                 System.out.println(result);
 
-                executeUpdate(INSERT_QUERY, "substrings", substr1, substr2, result);
+                executeUpdate(INSERT_QUERY, "substring", string1, string1, result);
             }
             case 4 -> {
                 String result = "UPPERCASE1: " + string1.toUpperCase() + ", LOWERCASE1: " + string1.toLowerCase() +
@@ -91,7 +119,6 @@ public class TaskNumberFour {
                 executeUpdate(INSERT_QUERY, "case_change", string1, string2, result);
             }
             case 5 -> {
-                SCANNER.nextLine();
                 System.out.print("Введите подстроку для поиска: ");
                 String substr = SCANNER.nextLine();
 
@@ -108,38 +135,37 @@ public class TaskNumberFour {
                 executeUpdate(INSERT_QUERY,"contains_and_ends", string1, string2, result);
             }
             case 6 -> {
-                String filePath = "src/resources/task4.csv";
-                String query = "SELECT * FROM TASK4";
-                try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
+                System.out.print("Введите название файла с расширением (.xls): ");
+                String fileName = SCANNER.nextLine().trim();
 
-                    for (int i = 1; i <= columnCount; i++) {
-                        fileWriter.append('"').append(metaData.getColumnName(i)).append('"');
-                        if (i < columnCount) fileWriter.append(";");
-                    }
-                    fileWriter.append("\n");
+                while (!fileName.toLowerCase().endsWith(".xls")) {
+                    System.out.print("Ошибка: файл должен оканчиваться на .xls. Повторите ввод: ");
+                    fileName = SCANNER.nextLine().trim();
+                }
 
-                    while (resultSet.next()) {
-                        for (int i = 1; i <= columnCount; i++) {
-                            String value = resultSet.getString(i);
-                            fileWriter.append('"');
-                            if (value != null) {
-                                fileWriter.append(value.replace("\"", "\"\""));
-                            }
-                            fileWriter.append('"');
-                            if (i < columnCount) fileWriter.append(";");
-                        }
-                        fileWriter.append("\n");
-                    }
+                String filePath = "C:/Users/User/Desktop/" + fileName;
 
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
+                String exportQuery =
+                        "SELECT 'id', 'operation', 'string1', 'string2', 'result' " +
+                                "UNION ALL " +
+                                "SELECT id, operation, string1, string2, result FROM TASK5 " +
+                                "INTO OUTFILE '" + filePath + "' " +
+                                "CHARACTER SET cp1251";
+
+                try (Connection conn = getConnection();
+                     PreparedStatement stmt = conn.prepareStatement(exportQuery)) {
+
+                    stmt.executeQuery();
+                    System.out.println("Данные успешно экспортированы в файл: " + filePath);
 
                     printTable();
-                } catch (SQLException | IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
+
+                } catch (SQLException e) {
+                    if (e.getMessage().contains("already exists")) {
+                        System.out.println("Файл уже существует! Удалите его и попробуйте ещё раз.");
+                    } else {
+                        System.out.println("Ошибка при экспорте: " + e.getMessage());
+                    }
                 }
             }
             case -1 -> {
@@ -159,6 +185,32 @@ public class TaskNumberFour {
             }
         } while (input.length() < 50);
         return input;
+    }
+
+    static int readSafeIndex(String prompt, int min, int max) {
+        while (true) {
+            System.out.print(prompt);
+            String input = SCANNER.nextLine();
+
+            if (!input.matches("\\d+")) {
+                System.out.println("Ошибка: введите неотрицательное целое число.");
+                continue;
+            }
+
+            try {
+                int value = Integer.parseInt(input);
+
+                if (value < min || value > max) {
+                    System.out.printf("Ошибка: индекс должен быть в диапазоне от %d до %d.%n", min, max);
+                    continue;
+                }
+
+                return value;
+
+            } catch (NumberFormatException e) {
+                System.out.println("Ошибка: число выходит за пределы допустимого диапазона int.");
+            }
+        }
     }
 
     static ResultSet executeQuery(String query, Object... params) {
@@ -188,38 +240,28 @@ public class TaskNumberFour {
         }
     }
     static void printTable() {
-        String query = "SELECT * FROM TASK4";
-        try (ResultSet resultSet = executeQuery(query)) {
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM TASK4")) {
 
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
+            System.out.printf("%-3s | %-20s | %-100s | %-100s | %-200s%n",
+                    "ID", "Operation", "String1", "String2", "Result");
+            System.out.println("--------------------------------------------------------------------------------------------------------" +
+                    "------------------------------------------------------------------------");
 
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String operation = rs.getString("operation");
+                String string1 = rs.getString("string1");
+                String string2 = rs.getString("string2");
+                String result = rs.getString("result");
+
+                System.out.printf("%-3d | %-20s | %-100s | %-100s | %-200s%n",
+                        id, operation, string1, string2, result);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-    }
-    static int readIndex() {
-        int value;
-        while (true) {
-            if (SCANNER.hasNextInt()) {
-                value = SCANNER.nextInt();
-                SCANNER.nextLine();
-                return value;
-            } else {
-                System.out.println("Введите целое число.");
-                SCANNER.next();
-            }
         }
     }
     static String getSubstring(String input, int start, int end) {

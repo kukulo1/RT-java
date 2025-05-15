@@ -13,7 +13,21 @@ public class ArrayPI {
         for (int i = 0; i < 7; i++) {
             System.out.print("Строка " + (i + 1) + ": ");
             for (int j = 0; j < 7; j++) {
-                arrayA[i][j] = scanner.nextInt();
+                while (true) {
+                    String input = scanner.next();
+
+                    if (!input.matches("-?\\d+")) {
+                        System.out.print("Ошибка: введите целое число: ");
+                        continue;
+                    }
+
+                    try {
+                        arrayA[i][j] = Integer.parseInt(input);
+                        break;
+                    } catch (NumberFormatException e) {
+                        System.out.print("Ошибка: число выходит за пределы допустимого диапазона int: ");
+                    }
+                }
             }
         }
 
@@ -21,10 +35,25 @@ public class ArrayPI {
         for (int i = 0; i < 7; i++) {
             System.out.print("Строка " + (i + 1) + ": ");
             for (int j = 0; j < 7; j++) {
-                arrayB[i][j] = scanner.nextInt();
+                while (true) {
+                    String input = scanner.next();
+
+                    if (!input.matches("-?\\d+")) {
+                        System.out.print("Ошибка: введите целое число: ");
+                        continue;
+                    }
+
+                    try {
+                        arrayB[i][j] = Integer.parseInt(input);
+                        break;
+                    } catch (NumberFormatException e) {
+                        System.out.print("Ошибка: число выходит за пределы допустимого диапазона int: ");
+                    }
+                }
             }
         }
     }
+
     public void print() {
         System.out.println("Матрица A:");
         for (int[] row : arrayA) {

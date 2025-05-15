@@ -1,39 +1,62 @@
 package taskNumberSix;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
 import java.util.Scanner;
 
 public class TaskNumberSix {
-    public final static Scanner SCANNER = new Scanner(System.in);
-    public final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true"; //тут не трогай, это ссылка для подключения к БД; ?createDatabaseIfNotExist=true надо для автоматического создания БД, если ее еще нету
-    public final static String DATABASE_LOGIN = "root"; //сюда логин
-    public final static String DATABASE_PASSWORD = "root"; //сюда свой пароль суй
-    public final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK6 (" +
+    protected final static Scanner SCANNER = new Scanner(System.in);
+    private final static String DATABASE_CONNECTION_URL = "jdbc:mysql://localhost:3306/java?createDatabaseIfNotExist=true";
+    private final static String DATABASE_LOGIN = "root";
+    private final static String DATABASE_PASSWORD = "root";
+    protected final static String CREATE_TABLE_QUERY = "CREATE TABLE IF NOT EXISTS TASK6 (" +
             "id INT AUTO_INCREMENT PRIMARY KEY, " +
             "matrix_name VARCHAR(255), " +
             "row_index INT, " +
             "col_index INT, " +
             "value DOUBLE)";
-    public final static String INSERT_QUERY = "INSERT INTO TASK6  (matrix_name, row_index, col_index, value) VALUES (?, ?, ?, ?)";
-    public static Matrix matrix;
+    protected final static String INSERT_QUERY = "INSERT INTO TASK6  (matrix_name, row_index, col_index, value) VALUES (?, ?, ?, ?)";
+    protected static Matrix matrix;
+    protected static boolean tableCreated = false;
+    protected final static String DROP_TABLE_QUERY = "DROP TABLE IF EXISTS TASK6";
+
 
     public static void main(String[] args) {
+        executeUpdate(DROP_TABLE_QUERY);
         int choice = 0;
 
         while (choice != -1) {
             printConsoleMenu();
+
             try {
+                if (!SCANNER.hasNextInt()) {
+                    System.out.println("Неверный выбор. Повторите.");
+                    SCANNER.next();
+                    continue;
+                }
+
                 choice = SCANNER.nextInt();
+
+                if (!tableCreated && choice > 2 && choice <= 5) {
+                    System.out.println("Ошибка! Таблица еще не создана для выполнения операции. Сперва выполните пункт 2.");
+                    continue;
+                }
+
                 doAction(choice);
-            } catch (NumberFormatException e) {
-                System.out.println("Введите номер действия!");
+
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
             }
         }
+    }
+
+
+    static Connection getConnection() {
+        try {
+            return DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            System.out.println("Произошла ошибка при попытке подключения к БД: " + e.getMessage());
+        }
+        return null;
     }
 
     static void printConsoleMenu() {
@@ -49,80 +72,19 @@ public class TaskNumberSix {
     static void doAction(int choice) {
         switch (choice) {
             case 1 -> {
-                List<String> tables = new ArrayList<>();
-                try (ResultSet resultSet = executeQuery("SHOW TABLES")) {
-                    while (resultSet.next()) {
-                        tables.add(resultSet.getString(1));
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-                if (tables.isEmpty()) {
-                    System.out.println("Таблицы не найдены.");
-                } else {
-                    tables.forEach(System.out::println);
-                }
+                DisplayTables.execute();
             }
             case 2 -> {
-                executeUpdate(CREATE_TABLE_QUERY);
-                System.out.println("Таблица создана!");
+                CreateTable.execute();
             }
             case 3 -> {
-                try {
-                    matrix = new Matrix();
-                    matrix.input();
-                    matrix.print();
-
-                    insertMatrixIntoDB(matrix.arrayA, "Matrix 1");
-                    insertMatrixIntoDB(matrix.arrayB, "Matrix 2");
-                } catch (InputMismatchException e) {
-                    System.out.println("Ошибка ввода: необходимо вводить только числа. Операция прервана.");
-                    SCANNER.nextLine();
-                }
+                InputMatrices.execute();
             }
             case 4 -> {
-                if (matrix != null) {
-                    int[][] result = matrix.multiply();
-                    printMatrix(result, "Результат (A x B)");
-                    insertMatrixIntoDB(result, "result of multiplication");
-                } else {
-                    System.out.println("Ошибка: матрицы не были введены.");
-                }
+                MultiplyMatrices.execute();
             }
             case 5 -> {
-                String filePath = "src/resources/task6.csv";
-                String query = "SELECT * FROM TASK6";
-                try (FileWriter fileWriter = new FileWriter(filePath);
-                     ResultSet resultSet = executeQuery(query)) {
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
-
-                    for (int i = 1; i <= columnCount; i++) {
-                        fileWriter.append('"').append(metaData.getColumnName(i)).append('"');
-                        if (i < columnCount) fileWriter.append(";");
-                    }
-                    fileWriter.append("\n");
-
-                    while (resultSet.next()) {
-                        for (int i = 1; i <= columnCount; i++) {
-                            String value = resultSet.getString(i);
-                            fileWriter.append('"');
-                            if (value != null) {
-                                fileWriter.append(value.replace("\"", "\"\""));
-                            }
-                            fileWriter.append('"');
-                            if (i < columnCount) fileWriter.append(";");
-                        }
-                        fileWriter.append("\n");
-                    }
-
-                    System.out.println("Данные успешно экспортированы в файл CSV: " + filePath);
-
-                    printTable();
-                } catch (SQLException | IOException e) {
-                    e.printStackTrace();
-                    System.out.println("Ошибка при экспорте данных в CSV.");
-                }
+                SQLToExcel.execute();
             }
             case -1 -> {
                 System.out.println("Выход из программы...");
@@ -134,7 +96,7 @@ public class TaskNumberSix {
     }
     static ResultSet executeQuery(String query, Object... params) {
         try {
-            Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+            Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             for (int i = 0; i < params.length; i++) {
                 statement.setObject(i + 1, params[i]);
@@ -147,7 +109,7 @@ public class TaskNumberSix {
     }
     static int executeUpdate(String query, Object... params) {
         try {
-            Connection connection = DriverManager.getConnection(DATABASE_CONNECTION_URL, DATABASE_LOGIN, DATABASE_PASSWORD);
+            Connection connection = getConnection();
             PreparedStatement statement = connection.prepareStatement(query);
             for (int i = 0; i < params.length; i++) {
                 statement.setObject(i + 1, params[i]);
@@ -156,28 +118,6 @@ public class TaskNumberSix {
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;
-        }
-    }
-    static void printTable() {
-        String query = "SELECT * FROM TASK6";
-        try (ResultSet resultSet = executeQuery(query)) {
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
-
-            for (int i = 1; i <= columnCount; i++) {
-                System.out.print(metaData.getColumnName(i) + "\t");
-            }
-            System.out.println();
-
-            while (resultSet.next()) {
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println();
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
     static void insertMatrixIntoDB(int[][] matrixData, String name) {
@@ -196,6 +136,31 @@ public class TaskNumberSix {
             System.out.println();
         }
         System.out.println();
+    }
+
+    static void printTable() {
+        try (Connection con = getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM TASK6")) {
+
+            System.out.printf("%-3s | %-20s | %-10s | %-10s | %-50s%n",
+                    "ID", "Matrix Name", "Row Index", "Col Index", "Value");
+            System.out.println("-----------------------------------------------------------------------------------------");
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String matrixName = rs.getString("matrix_name");
+                int rowIndex = rs.getInt("row_index");
+                int colIndex = rs.getInt("col_index");
+                double value = rs.getDouble("value");
+
+                System.out.printf("%-3d | %-20s | %-10d | %-10d | %-50.2f%n",
+                        id, matrixName, rowIndex, colIndex, value);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
 
